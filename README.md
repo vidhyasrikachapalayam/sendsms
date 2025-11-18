@@ -1,10 +1,10 @@
 
-# Ex.No:5 Create Your Own Content Providers to get Contacts details.
+# Ex.No:6 Design an android application Send SMS using Intent.
 
 
 ## AIM:
 
-To create your own content providers to get contacts details using Android Studio.
+To create and design an android application Send SMS using Intent using Android Studio.
 
 ## EQUIPMENTS REQUIRED:
 
@@ -14,7 +14,7 @@ Android Studio(Latest Version)
 
 Step 1: Open Android Stdio and then click on File -> New -> New project.
 
-Step 2: Then type the Application name as “contentprovider″ and click Next. 
+Step 2: Then type the Application name as smsintent and click Next. 
 
 Step 3: Then select the Minimum SDK as shown below and click Next.
 
@@ -22,124 +22,108 @@ Step 4: Then select the Empty Activity and click Next. Finally click Finish.
 
 Step 5: Design layout in activity_main.xml.
 
-Step 6: Get contacts details and Display details give in MainActivity file.
+Step 6: Send SMS and Display details give in MainActivity file.
 
 Step 7: Save and run the application.
 
 ## PROGRAM:
 ```
 /*
-Program to print the contact name and phone number using content providers.
-Developed by:Vidhyasri K
+Program to create and design an android application Send SMS using Intent.
+Developed by: Vidhyasri K
 Registeration Number : 212222230170
 */
 ```
-## Activity_main.xml:
+## ACTIVITY_MAIN.XML:
 ```
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
-    android:orientation="vertical"
-    android:padding="20dp">
+    android:background="#FFF0F5">
 
     <Button
-        android:id="@+id/btnGetContacts"
+        android:id="@+id/btnSendSMS"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:backgroundTint="@android:color/holo_purple"
-        android:text="GET CONTACTS"
-        android:textColor="@android:color/white" />
+        android:text="Send SMS"
+        android:backgroundTint="@android:color/holo_blue_light"
+        android:layout_centerInParent="true" />
 
-    <TextView
-        android:id="@+id/tvContacts"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:textColor="@android:color/black"
-        android:textSize="16sp" />
-
-</LinearLayout>
+</RelativeLayout>
 ```
 ## MainActivity.java:
 ```
-package com.example.contentproviderdemo;
+package com.example.sendsmsapp;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
 public class MainActivity extends AppCompatActivity {
 
-    private static final int REQUEST_CONTACT_PERMISSION = 1;
-
-    Button btnGetContacts;
-    TextView tvContacts;
+    private static final int SMS_PERMISSION_CODE = 101;
+    Button btnSendSMS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        btnGetContacts = findViewById(R.id.btnGetContacts);
-        tvContacts = findViewById(R.id.tvContacts);
+        btnSendSMS = findViewById(R.id.btnSendSMS);
 
-        btnGetContacts.setOnClickListener(new View.OnClickListener() {
+        btnSendSMS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Check if SMS permission is granted
                 if (ContextCompat.checkSelfPermission(MainActivity.this,
-                        Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                        Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.READ_CONTACTS}, REQUEST_CONTACT_PERMISSION);
+                            new String[]{Manifest.permission.SEND_SMS}, SMS_PERMISSION_CODE);
                 } else {
-                    getContacts();
+                    sendSMS();
                 }
             }
         });
     }
 
-    private void getContacts() {
-        StringBuilder builder = new StringBuilder();
+    private void sendSMS() {
+        String phone = "9840155373";   // Replace with target phone number
+        String message = "Hello, this is an SMS using Intent!";
 
-        Cursor cursor = getContentResolver().query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                null, null, null, null);
+        Intent smsIntent = new Intent(Intent.ACTION_VIEW);
+        smsIntent.setData(Uri.parse("smsto:" + phone));
+        smsIntent.putExtra("sms_body", message);
 
-        if (cursor != null) {
-            while (cursor.moveToNext()) {
-                String name = cursor.getString(
-                        cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                String phone = cursor.getString(
-                        cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                builder.append("Name: ").append(name).append("\nPhone: ").append(phone).append("\n\n");
-            }
-            cursor.close();
+        try {
+            startActivity(smsIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "SMS failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
-
-        tvContacts.setText(builder.toString());
     }
 
+    // Handle permission result
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == REQUEST_CONTACT_PERMISSION) {
+        if (requestCode == SMS_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getContacts();
+                sendSMS();
             } else {
-                Toast.makeText(this, "Permission Denied!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Permission denied to send SMS", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -147,10 +131,12 @@ public class MainActivity extends AppCompatActivity {
 ```
 ## AndroidManifest.xml:
 ```
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.contentproviderdemo">
+    package="com.example.sendsmsapp">
 
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Permission to send SMS -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
 
     <application
         android:allowBackup="true"
@@ -158,14 +144,18 @@ public class MainActivity extends AppCompatActivity {
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ContentproviderDemo">
+        android:theme="@style/Theme.SendSMSApp">
+
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">   <!-- 👈 Add this line -->
+            android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
     </application>
@@ -173,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
 </manifest>
 ```
 ## OUTPUT
-<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/29e130f7-72c7-447b-8cb3-48b3ef258f18" />
-## RESULT
-Thus a Simple Android Application create your own content providers to get contacts details using Android Studio is developed and executed successfully.
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/0d02f400-dbb2-418d-9621-c8298e09dd5b" />
 
+## RESULT
+Thus a Simple Android Application create and design an android application Send SMS using Intent using Android Studio is developed and executed successfully.
